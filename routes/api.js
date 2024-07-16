@@ -125,9 +125,32 @@ module.exports = function (app) {
       }
     })
     // delete exist data ----------------------------------------
-    .delete(function (req, res) {
+    .delete(async function (req, res) {
       let project = req.params.project;
-      res.json(req.body);
+      // get _id from form
+      const { _id } = req.body;
+      if (!_id) {
+        res.json({ 'error': 'missing _id' });
+        return;
+      };
+      try {
+        // check exist project
+        const exist_project = await Project.findOne({ name: project });
+        if (!exist_project) {
+          res.json({ 'error': 'not an exist project' });
+          return;
+        };
+        // delete
+        const deleted_Result = await Issue.deleteOne({ _id: _id });
+        if (deleted_Result.deletedCount === 0) {
+          throw "not found issue's id" // throw custom error 
+        };
+        res.json({ 'result': 'successfully deleted', '_id': _id });
+        console.log(`successfully deleted id:${_id}`);
+      } catch (err) {
+        res.json({ 'error': 'could not delete', '_id': _id });
+        console.log(`could not delete id:${_id}`);
+      }
     });
 
 };
