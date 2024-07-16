@@ -32,7 +32,7 @@ module.exports = function (app) {
   // default '/api/issues/apitest'
   app.route('/api/issues/:project')
 
-    // get data
+    // get data ------------------------------------------------
     .get(async function (req, res) {
       let project = req.params.project;
       // find project's name
@@ -48,7 +48,7 @@ module.exports = function (app) {
       res.json(data);
       console.log(`get data from ${project}'s project`);
     })
-    // add new data
+    // add new data --------------------------------------------
     .post(async function (req, res) {
       let project = req.params.project;
       const { issue_title, issue_text, created_by, assigned_to, status_text } = req.body;
@@ -92,12 +92,39 @@ module.exports = function (app) {
       });
       console.log('add new issue succesfull');
     })
-    // update exist data
-    .put(function (req, res) {
+    // update exist data ----------------------------------------
+    .put(async function (req, res) {
       let project = req.params.project;
-      res.json(req.body);
+      // get form data
+      const { _id, issue_title, issue_text, created_by, assigned_to, status_text, open } = req.body;
+      // if no _id input
+      if (!_id) {
+        res.json({ 'error': 'missing _id' });
+        return;
+      };
+      // if no update data
+      if (!issue_text && !issue_title && !created_by && !assigned_to && !status_text && !open) {
+        res.json({ 'error': 'no update field(s) sent', '_id': _id });
+        console.log(`could not update id:${_id} (no update fields)`);
+        return;
+      };
+      try {
+        // find an exist project
+        const exist_project = await Project.findOne({ name: project });
+        if (!exist_project) {
+          res.send('Not an exist project');
+        };
+        // findone and update exist issue
+        const update_issue = await Issue.findByIdAndUpdate(_id, { ...req.body, updated_on: new Date() });
+        await update_issue.save();
+        res.json({ 'result': 'successfully updated', '_id': _id });
+        console.log(`successfully updated id:${_id}`);
+      } catch (err) {
+        res.json({ error: 'could not update', '_id': _id });
+        console.log(`could not update id:${_id} (other error)`);
+      }
     })
-    // delete exist data
+    // delete exist data ----------------------------------------
     .delete(function (req, res) {
       let project = req.params.project;
       res.json(req.body);
