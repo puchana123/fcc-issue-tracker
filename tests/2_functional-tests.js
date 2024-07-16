@@ -2,6 +2,7 @@ const chaiHttp = require('chai-http');
 const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
+const api_url = '/api/issues/apitest';
 
 chai.use(chaiHttp);
 
@@ -10,15 +11,73 @@ suite('Functional Tests', function () {
     suite('POST: /api/issues/apitest', () => {
         // #1
         test('Create an issue with every field', () => {
-            assert.fail();
+            chai
+                .request(server)
+                .keepOpen()
+                .post(api_url)
+                .send({
+                    issue_title: 'Api test1',
+                    issue_text: 'this is an api test #1',
+                    created_by: 'ApiTester',
+                    assigned_to: 'ApiTester',
+                    status_text: 'test'
+                })
+                .end((err,res)=>{
+                    const output = res.body
+                    assert.equal(res.status, 200, 'api should response');
+                    assert.isObject(output,'output should be Object');
+                    assert.equal(output.issue_title, 'Api test1');
+                    assert.equal(output.issue_text, 'this is an api test #1');
+                    assert.equal(output.created_by, 'ApiTester');
+                    assert.equal(output.assigned_to, 'ApiTester');
+                    assert.equal(output.status_text, 'test');
+                    assert.property(output, 'created_on');
+                    assert.property(output, 'updated_on');
+                    assert.property(output, '_id');
+                })
         });
         // #2
         test('Create an issue with only required fields', () => {
-            assert.fail();
+            chai
+                .request(server)
+                .keepOpen()
+                .post(api_url)
+                .send({
+                    issue_title: 'Api test2',
+                    issue_text: 'this is an api test #2',
+                    created_by: 'ApiTester',
+                })
+                .end((err,res)=>{
+                    const output = res.body
+                    assert.equal(res.status, 200, 'api should response');
+                    assert.isObject(output,'output should be Object');
+                    assert.equal(output.issue_title, 'Api test2');
+                    assert.equal(output.issue_text, 'this is an api test #2');
+                    assert.equal(output.created_by, 'ApiTester');
+                    assert.property(output,'assigned_to');
+                    assert.property(output, 'status_text');
+                    assert.property(output, 'created_on');
+                    assert.property(output, 'updated_on');
+                    assert.property(output, '_id');
+                })
         });
         // #3
         test('Create an issue with missing required fields', () => {
-            assert.fail();
+            chai
+                .request(server)
+                .keepOpen()
+                .post(api_url)
+                .send({
+                    assigned_to: 'ApiTester',
+                    status_text: 'test'
+                })
+                .end((err,res)=>{
+                    const output = res.body
+                    assert.equal(res.status, 200, 'api should response');
+                    assert.isObject(output,'output should be Object');
+                    assert.property(output,'error');
+                    assert.equal(output.error, 'required field(s) missing');
+                })
         });
     });
     suite('GET: /api/issues/apitest', () => {
