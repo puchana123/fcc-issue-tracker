@@ -10,18 +10,18 @@ mongoose.connect(url);
 
 // create Schema
 const IssueSchema = new Schema({
-  project_id: {type:String, require:true},
-  issue_title: {type:String, require:true},
-  issue_text: {type:String, require:true},
+  project_id: { type: String, require: true },
+  issue_title: { type: String, require: true },
+  issue_text: { type: String, require: true },
   created_on: Date,
   updated_on: Date,
-  created_by: {type:String, require:true},
+  created_by: { type: String, require: true },
   assigned_to: String,
   open: Boolean,
   status_text: String
 });
 const projectSchema = new Schema({
-  name: {type: String, require: true}
+  name: { type: String, require: true }
 })
 
 // create model
@@ -35,24 +35,31 @@ module.exports = function (app) {
     // get data
     .get(async function (req, res) {
       let project = req.params.project;
+      // find project's name
+      const exist_project = await Project.findOne({ name: project });
+      if (!exist_project) {
+        res.send('Not an exist project');
+        return;
+      };
       // req.query get object as optional
       const filter = req.query;
-      filter.project = project;
-      const data = await Issue.find(filter).select('-__v -project');
+      filter.project_id = exist_project._id;
+      const data = await Issue.find(filter).select('-__v -project_id');
       res.json(data);
+      console.log(`get data from ${project}'s project`);
     })
     // add new data
     .post(async function (req, res) {
       let project = req.params.project;
       const { issue_title, issue_text, created_by, assigned_to, status_text } = req.body;
-      if(!issue_title || !issue_text || !created_by){
-        res.json({"error":"required field(s) missing"});
+      if (!issue_title || !issue_text || !created_by) {
+        res.json({ "error": "required field(s) missing" });
         return;
       }
       // find exist project
-      let found_project = await Project.findOne({name: project});
+      let found_project = await Project.findOne({ name: project });
       // not found add new project
-      if(!found_project){
+      if (!found_project) {
         const new_project = new Project({
           name: project
         });
