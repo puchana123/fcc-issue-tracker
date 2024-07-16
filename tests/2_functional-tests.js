@@ -139,7 +139,6 @@ suite('Functional Tests', function () {
         });
     });
     suite('PUT', () => {
-        // const id = '66963c03c8c35ad6e6720c65';
         // #7
         test('Update one field on an issue', (done) => {
             chai
