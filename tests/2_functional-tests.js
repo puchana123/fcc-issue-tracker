@@ -2,7 +2,7 @@ const chaiHttp = require('chai-http');
 const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
-const api_url = '/api/issues/apitest';
+const api_url = '/api/issues/apitest123';
 
 chai.use(chaiHttp);
 
@@ -16,7 +16,7 @@ suite('Functional Tests', function () {
                 .keepOpen()
                 .post(api_url)
                 .send({
-                    issue_title: 'Api test1',
+                    issue_title: 'Api_test1',
                     issue_text: 'this is an api test #1',
                     created_by: 'ApiTester',
                     assigned_to: 'ApiTester',
@@ -26,7 +26,7 @@ suite('Functional Tests', function () {
                     const output = res.body
                     assert.equal(res.status, 200, 'api should response');
                     assert.isObject(output,'output should be Object');
-                    assert.equal(output.issue_title, 'Api test1');
+                    assert.equal(output.issue_title, 'Api_test1');
                     assert.equal(output.issue_text, 'this is an api test #1');
                     assert.equal(output.created_by, 'ApiTester');
                     assert.equal(output.assigned_to, 'ApiTester');
@@ -43,7 +43,7 @@ suite('Functional Tests', function () {
                 .keepOpen()
                 .post(api_url)
                 .send({
-                    issue_title: 'Api test2',
+                    issue_title: 'Api_test2',
                     issue_text: 'this is an api test #2',
                     created_by: 'ApiTester',
                 })
@@ -51,7 +51,7 @@ suite('Functional Tests', function () {
                     const output = res.body
                     assert.equal(res.status, 200, 'api should response');
                     assert.isObject(output,'output should be Object');
-                    assert.equal(output.issue_title, 'Api test2');
+                    assert.equal(output.issue_title, 'Api_test2');
                     assert.equal(output.issue_text, 'this is an api test #2');
                     assert.equal(output.created_by, 'ApiTester');
                     assert.property(output,'assigned_to');
@@ -83,15 +83,50 @@ suite('Functional Tests', function () {
     suite('GET: /api/issues/apitest', () => {
         // #4
         test('View all issues on a project', () => {
-            assert.fail();
+            chai
+                .request(server)
+                .keepOpen()
+                .get(api_url)
+                .end((err,res)=>{
+                    const output = res.body
+                    assert.equal(res.status, 200, 'api should response');
+                    assert.equal(res.type, "application/json");
+                    assert.isArray(output, 'output is array of object');
+                })
         });
         // #5
         test('View issuses on a project with one filter', () => {
-            assert.fail();
+            chai
+            .request(server)
+            .keepOpen()
+            .get(api_url)
+            .query({'issue_title':'Api_test1'})
+            .end((err,res)=>{
+                const output = res.body
+                assert.equal(res.status, 200, 'api should response');
+                assert.equal(res.type, "application/json");
+                assert.isArray(output, 'output is array of object');
+                assert.equal(output[0].issue_title, 'Api_test1' ,'filter with issue_title');
+            })
         });
         // #6
         test('View issuses on a project with mulitiple filters', () => {
-            assert.fail();
+            chai
+            .request(server)
+            .keepOpen()
+            .get(api_url)
+            .query({
+                'issue_title':'Api_test1',
+                'status_text': 'test'
+            })
+            .end((err,res)=>{
+                const output = res.body
+                assert.equal(res.status, 200, 'api should response');
+                assert.equal(res.type, "application/json");
+                assert.isArray(output, 'output is array of object');
+                assert.equal(output[0].issue_title, 'Api_test1' ,'filter with issue_title');
+                assert.equal(output[0].status_text, 'test' ,'filter with status_text');
+            })
         });
     });
     suite('PUT: /api/issues/apitest', () => {
